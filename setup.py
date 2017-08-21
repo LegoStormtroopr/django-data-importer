@@ -1,6 +1,6 @@
 import os
 from setuptools import setup
-from data_interrogator import __version__
+from data_importer import __version__
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
     README = readme.read()

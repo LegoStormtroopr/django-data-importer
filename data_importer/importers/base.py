@@ -113,7 +113,10 @@ class DataImporter(object):
 
                 script = self.file_defn.get('after_create').get('python')
                 if script:
-                    exec(script)
+                    try:
+                        exec(script)
+                    except:
+                        pass
 
 
             if self.options.get('force_create', False):
