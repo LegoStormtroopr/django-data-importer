@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+import datetime
 
 from contextlib import contextmanager
 @contextmanager
@@ -37,12 +38,28 @@ class DataImporter(object):
         return model
 
     def process_row(self, row, index):
+        if self.file_defn.get('models', None):
+            self.import_defns = self.file_defn['models']
+        else:
+            self.import_defns = [self.file_defn]
+
+        for import_defn in self.import_defns:
+            model = self.get_model(import_defn['model'])
+            # self.stdout.write("importing file <%s> in as model <%s>"%(filename,model))
+            self.process_row_imports(row, index, import_defn)
+
+    def process_row_imports(self, row, index, import_defn):
         i = index
-        model = self.get_model()
+        model = self.get_model(import_defn['model'])
         verbosity = int(self.options.get('verbosity',1))
         values = {}
         try:
-            for f_name, f_details in self.file_defn['fields'].items():
+            if import_defn.get("condition"):
+                condition = import_defn["condition"]['python']
+                if not eval(condition):
+                    self.skipped.append(i)
+                    return
+            for f_name, f_details in import_defn['fields'].items():
 
                 if type(f_details) not in [type({}), type([])]:
                     values[f_name] = row[f_details]
@@ -77,6 +94,11 @@ class DataImporter(object):
                             ])
                         )
 
+                    if f_details['type'] == 'python':
+                        script = f_details.get('code')
+                        value = eval(script)
+                        values[f_name] = value
+
                     if f_details['type'] == 'coded':
                         mapping = f_details['choices']
                         default = mapping.pop('__unknown__', None)
@@ -92,9 +114,9 @@ class DataImporter(object):
             if self.debug_mode:
                 print(values)
 
-            if self.file_defn.get('database', {}).get("key"):
+            if import_defn.get('database', {}).get("key"):
                 # If the spec defines a lookup key to match this row against
-                keys = self.file_defn.get('database', {}).get("key")
+                keys = import_defn.get('database', {}).get("key")
                 lookup_vals = {}
                 if type(keys) is str:
                     keys = [keys]
@@ -105,13 +127,13 @@ class DataImporter(object):
             else:
                 obj,created = model.objects.get_or_create(**values)
 
-            if self.file_defn.get('after_create'):
+            if import_defn.get('after_create'):
                 was_created = created
                 this = obj
                 row = row
                 get_model = lambda x: self.get_model(x)
 
-                script = self.file_defn.get('after_create').get('python')
+                script = import_defn.get('after_create').get('python')
                 if script:
                     try:
                         exec(script)
