@@ -87,13 +87,18 @@ class DataImporter(object):
                     if f_details['type'] == 'lookup':
                         sub_model = self.get_model(f_details['model'])
                         try:
+                            lookups = {}
+                            for f,v in f_details['fields'].items():
+                                if type(v) is str:
+                                    lookups[f] = row[v]
+                                elif type(v) is dict:
+                                    if v['type'] == "const":
+                                        lookups[f] = v['value']
                             values[f_name] = sub_model.objects.get(
-                                **dict([
-                                    (f,row[v]) for f,v in f_details['fields'].items()
-                                ])
+                                **lookups
                             )
                         except:
-                            print(f_details['not_found'])
+                            # print(f_details['not_found'])
                             if f_details.get('not_found', None) == 'null':
                                 values[f_name] = None
                             elif f_details.get('not_found', None) == 'skip':

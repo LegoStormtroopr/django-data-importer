@@ -37,9 +37,6 @@ class Excel(DataImporter):
         else:
             headers = range(len(list(next(ws.rows))))
 
-        failed = []
-        success = []
-        skipped = []
         print("starting loop")
         for i,row in enumerate(ws.rows):   # iterates the rows of the file in order
             if i == 0 and has_header:
@@ -47,7 +44,7 @@ class Excel(DataImporter):
             row = dict(zip(headers,[c.value for c in row]))
             # print(i,row)
 
-            if len(failed) > 100:
+            if len(self.failed) > 100:
                 self.stderr.write('something has gone terribly wrong.') 
                 break
             if lines:
