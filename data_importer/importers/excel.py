@@ -6,11 +6,6 @@ class Excel(DataImporter):
     _cache = {}
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.file_defn = kwargs['file_defn']
-        self.options = kwargs['options']
-        self.stdout = kwargs['stdout']
-        self.stderr = kwargs['stderr']
-        self.debug_mode = kwargs['debug_mode']
 
     def process(self):
         filename = os.path.join(self.options['base_directory'], self.file_defn['file'])
