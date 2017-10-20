@@ -97,13 +97,13 @@ class DataImporter(object):
                             values[f_name] = sub_model.objects.get(
                                 **lookups
                             )
-                        except:
+                        except sub_model.DoesNotExist:
                             # print(f_details['not_found'])
                             if f_details.get('not_found', None) == 'null':
                                 values[f_name] = None
                             elif f_details.get('not_found', None) == 'skip':
                                 self.skip_row(i, row)
-                                continue
+                                return
                             else: #if f_details.get('not_found', None) != 'skip':
                                 raise
 
