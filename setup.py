@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 from data_importer import __version__
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
@@ -11,7 +11,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 setup(
     name='django-data-importer',
     version=__version__,
-    packages=['data_importer'],
+    packages=find_packages(),
     include_package_data=True,
     license='MIT License',
     description='A set of utilities that make importing relational data from tabular CSVs & spreadsheets easy',
