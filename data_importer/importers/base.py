@@ -73,6 +73,7 @@ class DataImporter(object):
                     self.skip_row(i, row)
                     return
             for f_name, f_details in import_defn['fields'].items():
+                
 
                 if type(f_details) not in [type({}), type([])]:
                     values[f_name] = row[f_details]
@@ -94,6 +95,8 @@ class DataImporter(object):
                                 elif type(v) is dict:
                                     if v['type'] == "const":
                                         lookups[f] = v['value']
+                                    elif v['type'] == "python":
+                                        lookups[f] = eval(v['code'])
                             values[f_name] = sub_model.objects.get(
                                 **lookups
                             )
