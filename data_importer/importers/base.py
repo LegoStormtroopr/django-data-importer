@@ -101,7 +101,6 @@ class DataImporter(object):
                                 **lookups
                             )
                         except sub_model.DoesNotExist:
-                            # print(f_details['not_found'])
                             if f_details.get('not_found', None) == 'null':
                                 values[f_name] = None
                             elif f_details.get('not_found', None) == 'skip':
@@ -120,6 +119,7 @@ class DataImporter(object):
 
                     if f_details['type'] == 'python':
                         script = f_details.get('code')
+                        get_model = lambda x: self.get_model(x)
                         value = eval(script)
                         values[f_name] = value
 
