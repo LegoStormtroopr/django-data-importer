@@ -12,6 +12,8 @@ import time
 import os, sys
 
 import yaml
+from jinja2 import Environment, PackageLoader, select_autoescape
+
 
 from contextlib import contextmanager
 @contextmanager
@@ -20,6 +22,12 @@ def fake_create_revision(*args,**kwargs):
 
 from data_importer import importers
 from data_importer.importers.base import fake_create_revision, get_reversion_manager
+
+
+env = Environment(
+    autoescape=select_autoescape(['html', 'xml'])
+)
+
 
 class Command(BaseCommand):
     args = '<command string>'
@@ -44,10 +52,23 @@ class Command(BaseCommand):
             default=False,
             help='If django-reversion is available on the system, disable using it for this upload.'
         )
+        parser.add_argument('--arg',
+            dest='meta_arguments',
+            action='append',
+            default=[],
+            help='Arguments for the yaml'
+        )
         parser.add_argument('-B','--base_directory',
             dest='base_directory',
             help='Directory to run file for'
         )
+
+    def process_meta_args(self, meta_args):
+        out = {}
+        for arg in meta_args:
+            key, val = arg.split(":",1)
+            out[key] = val
+        return out
 
     def handle(self, *args, **options):
         self.options = options
@@ -56,13 +77,16 @@ class Command(BaseCommand):
         if verbosity > 1:
             self.stdout.write("Running {} command(s)".format(len(args)))
 
+
+        self.meta_args = self.process_meta_args(options['meta_arguments'])
         details = None
-        with open(options['action_file'], 'r') as stream:
-            try:
-                details = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
-                sys.exit(1)
+        settings = open(options['action_file'], 'r').read()
+        try:
+            settings = env.from_string(settings).render(**self.meta_args)
+            details = yaml.load(settings)
+        except yaml.YAMLError as exc:
+            print(exc)
+            sys.exit(1)
 
         using_reversion, create_revision = get_reversion_manager(self.options['disable_reversion'])
         for i, file_defn in enumerate(details['files']):
@@ -95,9 +119,9 @@ class Command(BaseCommand):
             file_defn=file_defn, options=self.options,
             stdout=self.stdout, stderr=self.stderr,
             debug_mode=self.debug_mode,
+            meta_args=self.meta_args
         )
         return kls.process()
-            # print(blah)
 
     def process_csv_file(self, file_defn):
         from data_importer.importers import csv
@@ -105,6 +129,7 @@ class Command(BaseCommand):
             file_defn=file_defn, options=self.options,
             stdout=self.stdout, stderr=self.stderr,
             debug_mode=self.debug_mode,
+            meta_args=self.meta_args
         )
         return kls.process()
 

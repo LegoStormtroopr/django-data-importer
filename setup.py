@@ -37,6 +37,9 @@ setup(
     install_requires=[
         'django', # I mean obviously you'll have django installed if you want to use this.
         'openpyxl',
+        'click',
+        'sqlalchemy',
+        'jinja2',
     ],
     develop_requires=[
     ]

@@ -33,9 +33,15 @@ class DataImporter(object):
         self.debug_mode = kwargs['debug_mode']
         self.verbosity = int(self.options.get('verbosity',1))
 
-    def skip_row(self, i, row):
+    def skip_row(self, i, row, reason=""):
         if self.verbosity>=2:
-            self.stdout.write("Line %s - skipped making model"%i)
+            self.stdout.write(
+                "Line {row} - skipped making model - {name} - {reason}".format(
+                    reason=reason,
+                    row=i,
+                    name=self.import_name
+                )
+            )
         if self.verbosity==3:
             self.stdout.write('%s'%row)
         self.skipped.append(i)
@@ -60,6 +66,7 @@ class DataImporter(object):
         for import_defn in self.import_defns:
             model = self.get_model(import_defn['model'])
             # self.stdout.write("importing file <%s> in as model <%s>"%(filename,model))
+            self.import_name = import_defn.get('import_name', "")
             self.process_row_imports(row, index, import_defn)
 
     def process_row_imports(self, row, index, import_defn):
@@ -70,7 +77,7 @@ class DataImporter(object):
             if import_defn.get("condition"):
                 condition = import_defn["condition"]['python']
                 if not eval(condition):
-                    self.skip_row(i, row)
+                    self.skip_row(i, row, "condition not met")
                     return
             for f_name, f_details in import_defn['fields'].items():
 
@@ -102,7 +109,7 @@ class DataImporter(object):
                             if f_details.get('not_found', None) == 'null':
                                 values[f_name] = None
                             elif f_details.get('not_found', None) == 'skip':
-                                self.skip_row(i, row)
+                                self.skip_row(i, row, "related model not found")
                                 return
                             else: #if f_details.get('not_found', None) != 'skip':
                                 raise
@@ -167,7 +174,7 @@ class DataImporter(object):
             if created:
                 self.success.append(i)
             else:
-                self.skip_row(i, row)
+                self.skip_row(i, row, "already exists")
         except Exception as e:
             if self.verbosity >=2:
                 self.stderr.write("Line %s - %s"%(i,e))
