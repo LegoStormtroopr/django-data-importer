@@ -80,6 +80,7 @@ class DataImporter(object):
                     self.skip_row(i, row, "condition not met")
                     return
             for f_name, f_details in import_defn['fields'].items():
+                
 
                 if type(f_details) not in [type({}), type([])]:
                     values[f_name] = row[f_details]
@@ -101,11 +102,12 @@ class DataImporter(object):
                                 elif type(v) is dict:
                                     if v['type'] == "const":
                                         lookups[f] = v['value']
+                                    elif v['type'] == "python":
+                                        lookups[f] = eval(v['code'])
                             values[f_name] = sub_model.objects.get(
                                 **lookups
                             )
                         except sub_model.DoesNotExist:
-                            # print(f_details['not_found'])
                             if f_details.get('not_found', None) == 'null':
                                 values[f_name] = None
                             elif f_details.get('not_found', None) == 'skip':
@@ -124,6 +126,7 @@ class DataImporter(object):
 
                     if f_details['type'] == 'python':
                         script = f_details.get('code')
+                        get_model = lambda x: self.get_model(x)
                         value = eval(script)
                         values[f_name] = value
 
