@@ -38,7 +38,4 @@ setup(
         'django', # I mean obviously you'll have django installed if you want to use this.
         'openpyxl',
     ],
-    develop_requires=[
-    ]
-
 )
