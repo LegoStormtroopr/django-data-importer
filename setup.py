@@ -35,7 +35,6 @@ setup(
     ],
     keywords='django data import',
     install_requires=[
-        'django', # I mean obviously you'll have django installed if you want to use this.
         'openpyxl',
         'jinja2',
     ],
