@@ -39,7 +39,4 @@ setup(
         'openpyxl',
         'jinja2',
     ],
-    develop_requires=[
-    ]
-
 )
